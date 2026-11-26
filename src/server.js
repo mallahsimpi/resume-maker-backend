@@ -1,14 +1,7 @@
 
-import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
 
-import connectDB from "./config/db.js";
-
-import authRoutes from "./routes/authRoutes.js";
-import resumeRoutes from "./routes/resumeRoutes.js";
-
-// Load environment configuration
+// Load environment before application setup
 const envFile =
   process.env.NODE_ENV === "production"
     ? ".env.production"
@@ -16,7 +9,13 @@ const envFile =
 
 dotenv.config({ path: envFile });
 
-console.log(`Environment loaded: ${envFile}`);
+import express from "express";
+import cors from "cors";
+
+import connectDB from "./config/db.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import resumeRoutes from "./routes/resumeRoutes.js";
 
 const app = express();
 
@@ -29,7 +28,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow Postman and server-to-server requests
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -42,17 +40,18 @@ app.use(
 
 app.use(express.json());
 
-// Connect MongoDB
+// Database Connection Middleware
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error("DATABASE CONNECTION ERROR:", error.message);
 
     res.status(500).json({
       success: false,
       message: "Database connection failed!",
+      error: error.message,
     });
   }
 });
@@ -62,7 +61,7 @@ app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Resume Maker Backend API is running",
-    environment: process.env.NODE_ENV,
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
@@ -79,5 +78,5 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// Export Express App for Vercel
+// Export for Vercel
 export default app;

@@ -1,22 +1,30 @@
 
 import mongoose from "mongoose";
 
-let isConnected = false;
-
 const connectDB = async () => {
-  if (isConnected && mongoose.connection.readyState === 1) {
-    return;
+  try {
+    const MONGODB_URI = process.env.MONGODB_URI;
+
+    if (!MONGODB_URI) {
+      throw new Error("MONGODB_URI is missing");
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      return mongoose.connection;
+    }
+
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+    });
+
+    console.log("MongoDB Atlas Connected Successfully");
+
+    return mongoose.connection;
+
+  } catch (error) {
+    console.error("MongoDB Connection Error:", error.message);
+    throw error;
   }
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is missing");
-  }
-
-  await mongoose.connect(process.env.MONGODB_URI);
-
-  isConnected = true;
-
-  console.log("MongoDB Connected Successfully");
 };
 
 export default connectDB;
