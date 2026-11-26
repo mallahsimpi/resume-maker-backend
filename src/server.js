@@ -52,7 +52,7 @@ app.use(async (req, res, next) => {
 
     res.status(500).json({
       success: false,
-      message: "Database connection failed",
+      message: "Database connection failed!",
     });
   }
 });
